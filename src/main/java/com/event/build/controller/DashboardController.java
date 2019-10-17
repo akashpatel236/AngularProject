@@ -1,6 +1,10 @@
 package com.event.build.controller;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 
 import javax.websocket.server.PathParam;
 
@@ -19,6 +23,8 @@ import com.event.build.model.Answer;
 import com.event.build.model.AnswerDTO;
 import com.event.build.model.DashboardRequest;
 import com.event.build.model.DashboardRequestRepo;
+import com.event.build.model.ProcessDataDTO;
+import com.event.build.model.QuestionDTO;
 import com.fasterxml.jackson.databind.util.JSONPObject;
 
 @RestController
@@ -38,7 +44,7 @@ public class DashboardController {
 		 * sendData.add(repository.getData()); sendData.add(reterieveData());
 		 */
 		System.out.println("Returning objects of data");
-		return repository.getData();
+		return processedData();
 		
 	}
 	
@@ -60,11 +66,63 @@ public class DashboardController {
 	@ResponseBody
 	public DashboardRequest addDataToQuestion(@RequestBody AnswerDTO answer) {
 		
-		System.out.println("Request received to get question:"+answer);
+		System.out.println("Request received to add answer:"+answer);
 	
 		return repository.setNewAnswerforId(answer);
 	}
 	
+	@PostMapping(path="/submitQuestion",produces="application/json")
+	@ResponseBody
+	public void addQuestionToDB(@RequestBody QuestionDTO question) {
+		
+		System.out.println("Request received to get question:"+question);
+		addDataToRepo(question);
+		
+	}
+
+	private void addDataToRepo(QuestionDTO question) {
+		
+		
+		Date date = Calendar.getInstance().getTime();  
+        DateFormat dateFormat = new SimpleDateFormat("dd/mm/yyyy");  
+        String strDate = dateFormat.format(date);
+        
+        ArrayList<Answer> answerList=new ArrayList<Answer>();
+        
+        repository.getData().add(
+        new DashboardRequest(Integer.toString(repository.getData().size()+1),question.getQuestion(),question.getName(),
+        		answerList, strDate, question.getTags())
+        );
+        
+	}
+	
+	
+	public ArrayList<DashboardRequest> processedData() {
+		
+		ArrayList<DashboardRequest> processData = new ArrayList<DashboardRequest>();
+		
+		for (int i = 0; i <repository.getData().size(); i++) {
+			
+			ArrayList<Answer> answerList=new ArrayList<Answer>();
+			
+			if(!repository.getData().get(i).getAnswerList().isEmpty())
+			answerList.add(repository.getData().get(i).getAnswerList().get(0));
+			
+			processData.add(
+			new DashboardRequest(repository.getData().get(i).getId(),
+					repository.getData().get(i).getQuestion(),
+					repository.getData().get(i).getUserName(),
+					answerList,
+					repository.getData().get(i).getDate(),
+					repository.getData().get(i).getTags())
+			);
+			
+		}
+		
+		
+		return processData;
+	}
+
 	
 	/*
 	 * private DashboardRequest reterieveData() {

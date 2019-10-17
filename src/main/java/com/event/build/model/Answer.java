@@ -13,6 +13,11 @@ public class Answer {
 	
 	
 
+	public Answer() {
+		super();
+	}
+
+
 	public Answer(int votes, String date, String answerBy, String answer) {
 		super();
 		this.votes = votes;
